@@ -10,6 +10,11 @@ public partial class MainWindow : Window
 {
     public MainWindow() => InitializeComponent();
 
+    private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (DataContext is MainViewModel vm && !vm.ConfirmClose()) e.Cancel = true;
+    }
+
     /// <summary>Delete removes the selected element, but must not fire while text is being edited.</summary>
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {

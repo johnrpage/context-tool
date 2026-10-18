@@ -5,7 +5,13 @@
         xmlns:vm="clr-namespace:ContextSketch.App.ViewModels"
         xmlns:model="clr-namespace:ContextSketch.Core.Model;assembly=ContextSketch.Core"
         Title="{Binding WindowTitle}" Width="1200" Height="780" MinWidth="760" MinHeight="400"
-        PreviewKeyDown="OnPreviewKeyDown">
+        PreviewKeyDown="OnPreviewKeyDown" Closing="OnClosing">
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding NewCommand}" />
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding OpenCommand}" />
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveCommand}" />
+        <KeyBinding Key="S" Modifiers="Ctrl+Shift" Command="{Binding SaveAsCommand}" />
+    </Window.InputBindings>
     <Window.Resources>
         <Style x:Key="Heading" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -29,7 +35,10 @@
 
     <DockPanel>
         <ToolBar DockPanel.Dock="Top">
-            <Button Content="Open" Command="{Binding OpenCommand}" />
+            <Button Content="New" Command="{Binding NewCommand}" ToolTip="New diagram (Ctrl+N)" />
+            <Button Content="Open" Command="{Binding OpenCommand}" ToolTip="Open (Ctrl+O)" />
+            <Button Content="Save" Command="{Binding SaveCommand}" ToolTip="Save (Ctrl+S)" />
+            <Button Content="Save As" Command="{Binding SaveAsCommand}" ToolTip="Save As (Ctrl+Shift+S)" />
             <Separator />
             <Button Content="+ Primary Actor" Command="{Binding AddElementCommand}" CommandParameter="{x:Static model:ElementType.PrimaryActor}" />
             <Button Content="+ Secondary Actor" Command="{Binding AddElementCommand}" CommandParameter="{x:Static model:ElementType.SecondaryActor}" />

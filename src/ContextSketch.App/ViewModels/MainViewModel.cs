@@ -23,7 +23,23 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<ElementViewModel> Elements { get; } = [];
     public ObservableCollection<RelationshipViewModel> Relationships { get; } = [];
 
-    [ObservableProperty] private string _windowTitle = "ContextSketch";
+    private string? _path;
+    private bool _isDirty;
+
+    public bool IsDirty
+    {
+        get => _isDirty;
+        private set
+        {
+            if (_isDirty == value) return;
+            _isDirty = value;
+            OnPropertyChanged(nameof(WindowTitle));
+        }
+    }
+
+    private string DocumentName => _path is null ? "Untitled" : Path.GetFileName(_path);
+
+    public string WindowTitle => (IsDirty ? "*" : "") + DocumentName + " - ContextSketch";
 
     // ---- Selection -------------------------------------------------------------------------
 
@@ -123,12 +139,21 @@ public partial class MainViewModel : ObservableObject
     // ---- Files -----------------------------------------------------------------------------
 
     [RelayCommand]
+    private void New()
+    {
+        if (!ConfirmDiscard()) return;
+        Show(Diagram.CreateNew());
+        SetDocument(null);
+    }
+
+    [RelayCommand]
     private void Open()
     {
         var path = _dialogs.PickOpenFile();
         if (path is not null) LoadFile(path);
     }
 
+    /// <summary>Loads a file. A bad file is reported and the current diagram stays exactly as it was.</summary>
     public void LoadFile(string path)
     {
         LoadResult result;
@@ -149,9 +174,64 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        // Only ask about unsaved work once we know the new file is usable.
+        if (!ConfirmDiscard()) return;
+
         if (result.NeedsLayout) Core.Layout.AutoLayout.Apply(result.Diagram);
         Show(result.Diagram);
-        WindowTitle = Path.GetFileName(path) + " - ContextSketch";
+        SetDocument(path);
+    }
+
+    [RelayCommand]
+    private void Save() => TrySave();
+
+    [RelayCommand]
+    private void SaveAs() => TrySaveAs();
+
+    /// <summary>Called when the window is closing. Returns false if the user cancelled.</summary>
+    public bool ConfirmClose() => ConfirmDiscard();
+
+    private bool ConfirmDiscard()
+    {
+        if (!IsDirty) return true;
+        return _dialogs.AskUnsavedChanges(DocumentName) switch
+        {
+            UnsavedChoice.Save => TrySave(),
+            UnsavedChoice.Discard => true,
+            _ => false,
+        };
+    }
+
+    private bool TrySave() => _path is null ? TrySaveAs() : WriteTo(_path);
+
+    private bool TrySaveAs()
+    {
+        var suggested = string.IsNullOrWhiteSpace(Diagram.Title) ? "diagram" : Diagram.Title.Trim();
+        var path = _dialogs.PickSaveFile(_path is null ? suggested + Services.WpfDialogService.DefaultSuffix : Path.GetFileName(_path));
+        return path is not null && WriteTo(path);
+    }
+
+    private bool WriteTo(string path)
+    {
+        try
+        {
+            File.WriteAllText(path, DiagramJson.Save(Diagram) + "\n");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _dialogs.ShowError("Cannot save file", ex.Message);
+            return false;
+        }
+        SetDocument(path);
+        return true;
+    }
+
+    private void SetDocument(string? path)
+    {
+        _path = path;
+        _isDirty = false;
+        OnPropertyChanged(nameof(IsDirty));
+        OnPropertyChanged(nameof(WindowTitle));
     }
 
     /// <summary>Replaces the displayed diagram. The previous one stays untouched until this is called.</summary>
@@ -175,8 +255,5 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(DiagramTitle));
     }
 
-    private void OnModelChanged()
-    {
-        // Dirty tracking arrives with file handling.
-    }
+    private void OnModelChanged() => IsDirty = true;
 }
