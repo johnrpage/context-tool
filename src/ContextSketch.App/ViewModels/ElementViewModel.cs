@@ -64,6 +64,14 @@ public partial class ElementViewModel : ObservableObject
         RaisePosition();
     }
 
+    /// <summary>Moves the element by hand. This pins it so auto-layout leaves it alone.</summary>
+    public void DragTo(double x, double y)
+    {
+        Model.Pinned = true;
+        MoveTo(x, y);
+        _changed();
+    }
+
     /// <summary>Re-reads position and pin state from the model after the model was changed directly.</summary>
     public void RaisePosition()
     {

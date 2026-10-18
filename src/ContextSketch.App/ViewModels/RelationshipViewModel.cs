@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using ContextSketch.Core.Geometry;
 using ContextSketch.Core.Model;
 using CorePoint = ContextSketch.Core.Geometry.Point;
@@ -26,8 +27,8 @@ public partial class RelationshipViewModel : ObservableObject
     }
 
     public Relationship Model { get; }
-    public ElementViewModel From { get; }
-    public ElementViewModel To { get; }
+    public ElementViewModel From { get; private set; }
+    public ElementViewModel To { get; private set; }
 
     [ObservableProperty] private bool _isSelected;
 
@@ -73,6 +74,23 @@ public partial class RelationshipViewModel : ObservableObject
 
     public bool StartArrowVisible => Model.Direction == RelationshipDirection.TwoWay;
 
+    public static RelationshipDirection[] DirectionOptions { get; } = [RelationshipDirection.OneWay, RelationshipDirection.TwoWay];
+
+    public string Summary => From.Name + " → " + To.Name;
+
+    /// <summary>Reverses which end of the relationship is the source.</summary>
+    [RelayCommand]
+    private void SwapEnds()
+    {
+        (Model.From, Model.To) = (Model.To, Model.From);
+        (From, To) = (To, From);
+        OnPropertyChanged(nameof(From));
+        OnPropertyChanged(nameof(To));
+        OnPropertyChanged(nameof(Summary));
+        RaiseGeometry();
+        _changed();
+    }
+
     private (CorePoint Start, CorePoint End) Line => EdgeGeometry.LineBetween(From.Model, To.Model);
 
     public double X1 => Line.Start.X;
@@ -108,7 +126,12 @@ public partial class RelationshipViewModel : ObservableObject
 
     private void OnEndpointChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is not (nameof(ElementViewModel.X) or nameof(ElementViewModel.Y))) return;
+        if (e.PropertyName == nameof(ElementViewModel.Name)) OnPropertyChanged(nameof(Summary));
+        if (e.PropertyName is nameof(ElementViewModel.X) or nameof(ElementViewModel.Y)) RaiseGeometry();
+    }
+
+    private void RaiseGeometry()
+    {
         OnPropertyChanged(nameof(X1));
         OnPropertyChanged(nameof(Y1));
         OnPropertyChanged(nameof(X2));

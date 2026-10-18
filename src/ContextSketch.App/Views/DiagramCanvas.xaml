@@ -114,6 +114,9 @@
         <DataTemplate x:Key="RelationshipTemplate" DataType="{x:Type vm:RelationshipViewModel}">
             <Canvas>
                 <Line X1="{Binding X1}" Y1="{Binding Y1}" X2="{Binding X2}" Y2="{Binding Y2}" Stroke="{DynamicResource LineColor}" StrokeThickness="1.5" />
+                <Line X1="{Binding X1}" Y1="{Binding Y1}" X2="{Binding X2}" Y2="{Binding Y2}" Stroke="Transparent" StrokeThickness="14" />
+                <Line X1="{Binding X1}" Y1="{Binding Y1}" X2="{Binding X2}" Y2="{Binding Y2}" Stroke="{DynamicResource Selection}" StrokeThickness="4" Opacity="0.55" IsHitTestVisible="False"
+                      Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibility}}" />
                 <Polygon Points="{Binding EndArrow}" Fill="{DynamicResource LineColor}" />
                 <Polygon Points="{Binding StartArrow}" Fill="{DynamicResource LineColor}"
                          Visibility="{Binding StartArrowVisible, Converter={StaticResource BoolToVisibility}}" />
@@ -127,7 +130,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid x:Name="Viewport" ClipToBounds="True" Background="{DynamicResource Background}"
+    <Grid x:Name="Viewport" ClipToBounds="True" Focusable="True" Background="{DynamicResource Background}"
           MouseWheel="OnMouseWheel" MouseLeftButtonDown="OnMouseDown" MouseMove="OnMouseMove" MouseLeftButtonUp="OnMouseUp"
           SizeChanged="OnSizeChanged">
         <Canvas x:Name="World" HorizontalAlignment="Left" VerticalAlignment="Top" Width="1" Height="1">
