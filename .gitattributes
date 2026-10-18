@@ -1,0 +1,20 @@
+# Normalise line endings on commit; checkout uses platform default
+* text=auto
+
+# Source
+*.cs     text diff=csharp
+*.csproj text
+*.props  text
+*.xaml   text
+*.sln    text eol=crlf
+
+# Data and docs
+*.json   text
+*.md     text diff=markdown
+*.svg    text
+*.xml    text
+
+# Binary
+*.png    binary
+*.ico    binary
+*.jpg    binary
