@@ -188,6 +188,23 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void SaveAs() => TrySaveAs();
 
+    [RelayCommand]
+    private void ExportSvg()
+    {
+        var name = string.IsNullOrWhiteSpace(Diagram.Title) ? "diagram" : Diagram.Title.Trim();
+        var path = _dialogs.PickExportFile(name + ".svg");
+        if (path is null) return;
+
+        try
+        {
+            File.WriteAllText(path, Core.Svg.SvgExporter.Export(Diagram));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _dialogs.ShowError("Cannot export file", ex.Message);
+        }
+    }
+
     /// <summary>Called when the window is closing. Returns false if the user cancelled.</summary>
     public bool ConfirmClose() => ConfirmDiscard();
 

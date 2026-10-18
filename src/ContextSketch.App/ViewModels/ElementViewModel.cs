@@ -21,6 +21,17 @@ public partial class ElementViewModel : ObservableObject
     public Element Model { get; }
     public string Id => Model.Id;
     public ElementType Type => Model.Type;
+
+    public string TypeName => Type switch
+    {
+        ElementType.System => "System",
+        ElementType.PrimaryActor => "Primary actor",
+        ElementType.SecondaryActor => "Secondary actor",
+        ElementType.ExternalSystem => "External system",
+        ElementType.Storage => "Storage",
+        _ => "Element",
+    };
+
     public double Width { get; }
     public double Height { get; }
 

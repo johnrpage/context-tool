@@ -33,6 +33,19 @@ public sealed class WpfDialogService : IDialogService
         return path.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ? path : path + DefaultSuffix;
     }
 
+    public string? PickExportFile(string suggestedName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Filter = "SVG image (*.svg)|*.svg",
+            Title = "Export SVG",
+            FileName = suggestedName,
+            DefaultExt = ".svg",
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
     public UnsavedChoice AskUnsavedChanges(string documentName)
     {
         var answer = MessageBox.Show(

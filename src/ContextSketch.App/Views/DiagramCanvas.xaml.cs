@@ -23,6 +23,8 @@ public partial class DiagramCanvas : UserControl
     private Point _dragOrigin;
     private bool _dragStarted;
 
+    public event EventHandler? ElementDoubleClicked;
+
     public DiagramCanvas() => InitializeComponent();
 
     private MainViewModel? Main => DataContext as MainViewModel;
@@ -63,6 +65,7 @@ public partial class DiagramCanvas : UserControl
         {
             case ElementViewModel element:
                 Main?.SelectElement(element);
+                if (e.ClickCount == 2) ElementDoubleClicked?.Invoke(this, EventArgs.Empty);
                 _mode = Mode.DragElement;
                 _dragged = element;
                 _dragOrigin = new Point(element.X, element.Y);

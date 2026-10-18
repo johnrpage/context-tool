@@ -45,6 +45,8 @@
             <Button Content="+ External System" Command="{Binding AddElementCommand}" CommandParameter="{x:Static model:ElementType.ExternalSystem}" />
             <Button Content="+ Storage" Command="{Binding AddElementCommand}" CommandParameter="{x:Static model:ElementType.Storage}" />
             <Separator />
+            <Button Content="Export SVG" Command="{Binding ExportSvgCommand}" />
+            <Separator />
             <Button Content="Auto-layout" Command="{Binding AutoLayoutCommand}" ToolTip="Arrange elements that have not been dragged" />
             <Button Content="Auto-layout all" Command="{Binding AutoLayoutAllCommand}" ToolTip="Release every pin, then arrange everything" />
             <Separator />
@@ -76,9 +78,9 @@
 
                     <!-- Selected element -->
                     <StackPanel DataContext="{Binding SelectedElement}" Style="{StaticResource WhenSelected}">
-                        <TextBlock Text="{Binding Type, StringFormat=Element ({0})}" Style="{StaticResource Heading}" />
+                        <TextBlock Text="{Binding TypeName}" Style="{StaticResource Heading}" />
                         <TextBlock Text="Name" Style="{StaticResource FieldLabel}" />
-                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Text="Technology" Style="{StaticResource FieldLabel}" />
                         <TextBox Text="{Binding Technology, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Text="Description" Style="{StaticResource FieldLabel}" />
@@ -101,6 +103,6 @@
             </ScrollViewer>
         </Border>
 
-        <views:DiagramCanvas />
+        <views:DiagramCanvas ElementDoubleClicked="OnElementDoubleClicked" />
     </DockPanel>
 </Window>

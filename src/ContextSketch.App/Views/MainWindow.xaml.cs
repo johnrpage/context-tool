@@ -10,6 +10,14 @@ public partial class MainWindow : Window
 {
     public MainWindow() => InitializeComponent();
 
+    /// <summary>Double-clicking an element jumps straight into editing its name.</summary>
+    private void OnElementDoubleClicked(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(() =>
+        {
+            NameBox.Focus();
+            NameBox.SelectAll();
+        }, System.Windows.Threading.DispatcherPriority.Input);
+
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         if (DataContext is MainViewModel vm && !vm.ConfirmClose()) e.Cancel = true;
