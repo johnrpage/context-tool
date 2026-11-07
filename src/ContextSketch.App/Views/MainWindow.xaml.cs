@@ -18,6 +18,12 @@ public partial class MainWindow : Window
             NameBox.SelectAll();
         }, System.Windows.Threading.DispatcherPriority.Input);
 
+    /// <summary>Once a label has been typed, the layout may need a wider gap for it. Done on leaving the box so nothing jumps while typing.</summary>
+    private void OnLabelLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm) vm.RelayoutAfterLabelEdit();
+    }
+
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         if (DataContext is MainViewModel vm && !vm.ConfirmClose()) e.Cancel = true;

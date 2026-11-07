@@ -55,11 +55,8 @@ public partial class ElementViewModel : ObservableObject
         set
         {
             Set(Model.Technology ?? "", value, v => Model.Technology = string.IsNullOrWhiteSpace(v) ? null : v);
-            OnPropertyChanged(nameof(TechnologyTag));
         }
     }
-
-    public string TechnologyTag => string.IsNullOrWhiteSpace(Model.Technology) ? "" : "[" + Model.Technology + "]";
 
     public double X => Model.X;
     public double Y => Model.Y;

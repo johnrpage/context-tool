@@ -18,10 +18,16 @@
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
+        <!-- Technology: plain, smaller, slightly faded text under the name (opacity matches DiagramStyle.TechnologyOpacity) -->
+        <Style x:Key="TechText" TargetType="TextBlock" BasedOn="{StaticResource SubText}">
+            <Setter Property="Opacity" Value="0.8" />
+            <!-- Up to two lines, as in the SVG -->
+            <Setter Property="MaxHeight" Value="30" />
+        </Style>
 
         <!-- System: emphasised rectangle -->
         <DataTemplate x:Key="SystemTemplate" DataType="{x:Type vm:ElementViewModel}">
-            <Border Background="{DynamicResource SystemFill}" BorderBrush="{DynamicResource SystemStroke}" BorderThickness="2" CornerRadius="6" Padding="10,8">
+            <Border Background="{DynamicResource SystemFill}" BorderBrush="{DynamicResource SystemStroke}" BorderThickness="3" CornerRadius="6" Padding="10,8">
                 <StackPanel VerticalAlignment="Center" TextElement.Foreground="{DynamicResource SystemText}">
                     <TextBlock Text="{Binding Name}" Style="{StaticResource NameText}" FontSize="16" MaxHeight="44" />
                     <TextBlock Text="{Binding Description}" Style="{StaticResource SubText}" MaxHeight="44" Margin="0,4,0,0" />
@@ -38,7 +44,7 @@
                         <Path Data="M 0,26 A 13,13 0 0 1 26,26 Z" VerticalAlignment="Bottom" Fill="{DynamicResource PrimaryText}" />
                     </Grid>
                     <TextBlock Text="{Binding Name}" Style="{StaticResource NameText}" MaxHeight="36" />
-                    <TextBlock Text="{Binding TechnologyTag}" Style="{StaticResource SubText}" />
+                    <TextBlock Text="{Binding Technology}" Style="{StaticResource TechText}" />
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -54,7 +60,7 @@
                         <Path Data="M 0,26 A 13,13 0 0 1 26,26 Z" VerticalAlignment="Bottom" Fill="{DynamicResource SecondaryText}" />
                     </Grid>
                     <TextBlock Text="{Binding Name}" Style="{StaticResource NameText}" MaxHeight="36" />
-                    <TextBlock Text="{Binding TechnologyTag}" Style="{StaticResource SubText}" />
+                    <TextBlock Text="{Binding Technology}" Style="{StaticResource TechText}" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -64,7 +70,7 @@
             <Border Background="{DynamicResource ExternalFill}" BorderBrush="{DynamicResource ExternalStroke}" BorderThickness="2" Padding="10,8">
                 <StackPanel VerticalAlignment="Center" TextElement.Foreground="{DynamicResource ExternalText}">
                     <TextBlock Text="{Binding Name}" Style="{StaticResource NameText}" MaxHeight="40" />
-                    <TextBlock Text="{Binding TechnologyTag}" Style="{StaticResource SubText}" Margin="0,2,0,0" />
+                    <TextBlock Text="{Binding Technology}" Style="{StaticResource TechText}" Margin="0,2,0,0" />
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -78,7 +84,7 @@
                       Data="M 0,12 A 85,12 0 0 0 170,12" />
                 <StackPanel VerticalAlignment="Center" Margin="10,18,10,6" TextElement.Foreground="{DynamicResource StorageText}">
                     <TextBlock Text="{Binding Name}" Style="{StaticResource NameText}" MaxHeight="36" />
-                    <TextBlock Text="{Binding TechnologyTag}" Style="{StaticResource SubText}" />
+                    <TextBlock Text="{Binding Technology}" Style="{StaticResource TechText}" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -120,10 +126,10 @@
                 <Polygon Points="{Binding EndArrow}" Fill="{DynamicResource LineColor}" />
                 <Polygon Points="{Binding StartArrow}" Fill="{DynamicResource LineColor}"
                          Visibility="{Binding StartArrowVisible, Converter={StaticResource BoolToVisibility}}" />
+                <!-- The label is pre-wrapped (TextWrap.LabelLines) so it breaks exactly as in the SVG -->
                 <StackPanel Canvas.Left="{Binding LabelLeft}" Canvas.Top="{Binding LabelTop}" Width="{Binding LabelBoxWidth}">
-                    <TextBlock Text="{Binding Label}" Style="{StaticResource SubText}" FontSize="12" Foreground="{DynamicResource LabelText}"
-                               Background="{DynamicResource Background}" HorizontalAlignment="Center" />
-                    <TextBlock Text="{Binding TechnologyTag}" Style="{StaticResource SubText}" Foreground="{DynamicResource LineColor}"
+                    <TextBlock Text="{Binding WrappedLabel}" FontSize="12" TextAlignment="Center" TextWrapping="NoWrap"
+                               LineHeight="16" LineStackingStrategy="BlockLineHeight" Foreground="{DynamicResource LabelText}"
                                Background="{DynamicResource Background}" HorizontalAlignment="Center" />
                 </StackPanel>
             </Canvas>

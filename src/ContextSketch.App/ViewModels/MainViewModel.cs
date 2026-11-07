@@ -127,6 +127,17 @@ public partial class MainViewModel : ObservableObject
         OnModelChanged();
     }
 
+    /// <summary>
+    /// Re-runs auto-layout after a label edit, since a longer label can widen the gap to the system.
+    /// Only unpinned elements move, and nothing is marked changed unless something actually moved.
+    /// </summary>
+    public void RelayoutAfterLabelEdit()
+    {
+        var positions = Core.Layout.AutoLayout.Compute(Diagram);
+        if (Diagram.Elements.Any(e => positions.TryGetValue(e.Id, out var p) && (p.X != e.X || p.Y != e.Y)))
+            RunLayout(clearPins: false);
+    }
+
     private static string DefaultName(ElementType type) => type switch
     {
         ElementType.PrimaryActor => "Primary Actor",

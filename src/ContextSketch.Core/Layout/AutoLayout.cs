@@ -31,7 +31,7 @@ public static class AutoLayout
 
         // Left zone: one tall column of primary actors, centred on the y of the system.
         var primaries = Unpinned(diagram, ElementType.PrimaryActor);
-        var leftX = anchor.X - sysW / 2 - options.ZoneGap - size.Width / 2;
+        var leftX = anchor.X - sysW / 2 - GapFor(diagram, primaries, options) - size.Width / 2;
         for (var i = 0; i < primaries.Count; i++)
         {
             var ideal = new Point(leftX, anchor.Y + (i - (primaries.Count - 1) / 2.0) * pitch);
@@ -44,7 +44,7 @@ public static class AutoLayout
         var totalHeight = rows.Sum(r => r * size.Height + (r - 1) * options.RowGap)
                           + (groups.Count - 1) * (options.RowGap + options.GroupGap);
         var top = anchor.Y - totalHeight / 2;
-        var firstColumnX = anchor.X + sysW / 2 + options.ZoneGap + size.Width / 2;
+        var firstColumnX = anchor.X + sysW / 2 + GapFor(diagram, groups.SelectMany(g => g), options) + size.Width / 2;
 
         for (var g = 0; g < groups.Count; g++)
         {
@@ -76,6 +76,15 @@ public static class AutoLayout
             element.Y = p.Y;
         }
     }
+
+    /// <summary>
+    /// The gap between the system and a zone: the usual one, widened (up to a cap) so the longest label in the
+    /// zone fits without being cut. The horizontal gap is the shortest any of the zone's arrows can be.
+    /// </summary>
+    private static double GapFor(Diagram diagram, IEnumerable<Element> zone, LayoutOptions options) =>
+        zone.Select(e => TextWrap.ArrowLengthFor(diagram.RelationshipOf(e.Id)?.Label, options.ZoneGap, options.MaxZoneGap))
+            .DefaultIfEmpty(options.ZoneGap)
+            .Max();
 
     private static List<Element> Unpinned(Diagram diagram, ElementType type) =>
         diagram.Elements.Where(e => e.Type == type && !e.Pinned).ToList();

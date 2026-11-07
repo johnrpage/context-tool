@@ -42,7 +42,6 @@ public static class DiagramJson
                 From = r.From,
                 To = r.To,
                 Label = r.Label,
-                Technology = Blank(r.Technology),
                 Direction = Camel(r.Direction),
             }).ToList(),
         };
@@ -102,7 +101,6 @@ public static class DiagramJson
                 From = r.From ?? "",
                 To = r.To ?? "",
                 Label = r.Label ?? "",
-                Technology = r.Technology,
                 Direction = direction,
             });
         }

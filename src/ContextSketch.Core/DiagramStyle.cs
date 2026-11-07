@@ -5,31 +5,37 @@ public static class DiagramStyle
 {
     public const string FontFamily = "Segoe UI, Arial, sans-serif";
 
-    public const string SystemFill = "#1168BD";
-    public const string SystemStroke = "#0B4884";
-    public const string SystemText = "#FFFFFF";
+    // The system: a white box with a heavy ink outline.
+    public const string SystemFill = "#FFFFFF";
+    public const string SystemStroke = "#0F172A";
+    public const string SystemText = "#0F172A";
+    public const double SystemStrokeWidth = 3;
 
-    public const string PrimaryFill = "#08427B";
-    public const string PrimaryStroke = "#052E56";
+    // Everything around it is slate.
+    public const string PrimaryFill = "#64748B";
+    public const string PrimaryStroke = "#475569";
     public const string PrimaryText = "#FFFFFF";
 
-    public const string SecondaryFill = "#DCE8F5";
-    public const string SecondaryStroke = "#08427B";
-    public const string SecondaryText = "#08427B";
+    public const string SecondaryFill = "#F8FAFC";
+    public const string SecondaryStroke = "#64748B";
+    public const string SecondaryText = "#334155";
 
-    public const string ExternalFill = "#8A8F98";
-    public const string ExternalStroke = "#6B7078";
-    public const string ExternalText = "#FFFFFF";
+    public const string ExternalFill = "#E2E8F0";
+    public const string ExternalStroke = "#94A3B8";
+    public const string ExternalText = "#1E293B";
 
-    public const string StorageFill = "#438DD5";
-    public const string StorageStroke = "#2E6DA9";
-    public const string StorageText = "#FFFFFF";
+    public const string StorageFill = "#CBD5E1";
+    public const string StorageStroke = "#475569";
+    public const string StorageText = "#1E293B";
 
     public const string LineColor = "#52606D";
-    public const string LabelText = "#1F2933";
+    public const string LabelText = "#0F172A";
     public const string Background = "#FFFFFF";
     public const string Selection = "#F59E0B";
-    public const string Divider = "#D5DAE0";
+    public const string Divider = "#CBD5E1";
+
+    /// <summary>An element's technology line is drawn in its text colour at this opacity.</summary>
+    public const double TechnologyOpacity = 0.8;
 
     public static IEnumerable<KeyValuePair<string, string>> All => new Dictionary<string, string>
     {

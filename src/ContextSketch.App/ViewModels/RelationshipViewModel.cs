@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ContextSketch.Core;
 using ContextSketch.Core.Geometry;
 using ContextSketch.Core.Model;
 using CorePoint = ContextSketch.Core.Geometry.Point;
@@ -12,7 +13,8 @@ public partial class RelationshipViewModel : ObservableObject
 {
     private const double ArrowLength = 12;
     private const double ArrowHalfWidth = 5;
-    private const double LabelWidth = 160;
+    private const double LabelWidth = 300; // wider than the longest label line (TextWrap.LabelMaxChars)
+    private const double LabelLineHeight = 16; // 12px Segoe UI, matching the TextBlock's LineHeight
 
     private readonly Action _changed;
 
@@ -40,24 +42,14 @@ public partial class RelationshipViewModel : ObservableObject
             if (Model.Label == value) return;
             Model.Label = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(WrappedLabel));
+            OnPropertyChanged(nameof(LabelTop));
             _changed();
         }
     }
 
-    public string Technology
-    {
-        get => Model.Technology ?? "";
-        set
-        {
-            if (Technology == value) return;
-            Model.Technology = string.IsNullOrWhiteSpace(value) ? null : value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(TechnologyTag));
-            _changed();
-        }
-    }
-
-    public string TechnologyTag => string.IsNullOrWhiteSpace(Model.Technology) ? "" : "[" + Model.Technology + "]";
+    /// <summary>The label broken into lines exactly as the SVG export breaks it.</summary>
+    public string WrappedLabel => string.Join("\n", TextWrap.LabelLines(Model.Label, Line.Start, Line.End));
 
     public RelationshipDirection Direction
     {
@@ -99,7 +91,7 @@ public partial class RelationshipViewModel : ObservableObject
     public double Y2 => Line.End.Y;
 
     public double LabelLeft => EdgeGeometry.Midpoint(Line.Start, Line.End).X - LabelWidth / 2;
-    public double LabelTop => EdgeGeometry.Midpoint(Line.Start, Line.End).Y - 18;
+    public double LabelTop => EdgeGeometry.Midpoint(Line.Start, Line.End).Y - TextWrap.LabelLines(Model.Label, Line.Start, Line.End).Count * LabelLineHeight / 2;
     public double LabelBoxWidth => LabelWidth;
 
     public PointCollection EndArrow => Arrow(Line.End, Line.Start);
@@ -138,6 +130,7 @@ public partial class RelationshipViewModel : ObservableObject
         OnPropertyChanged(nameof(Y2));
         OnPropertyChanged(nameof(LabelLeft));
         OnPropertyChanged(nameof(LabelTop));
+        OnPropertyChanged(nameof(WrappedLabel));
         OnPropertyChanged(nameof(EndArrow));
         OnPropertyChanged(nameof(StartArrow));
     }

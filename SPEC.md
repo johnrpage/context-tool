@@ -1,6 +1,6 @@
 # ContextSketch: Spec
 
-A small WPF desktop tool for quickly sketching **system context diagrams** (C4 level 1 style): one system being designed, with primary actors on the left and secondary actors, external systems, and storage on the right. Fast to create, saved as human-readable JSON, reloadable, exportable to SVG.
+A small WPF desktop tool for quickly sketching **system context diagrams**: one system being designed, with primary actors on the left and secondary actors, external systems, and storage on the right. Fast to create, saved as human-readable JSON, reloadable, exportable to SVG.
 
 **Workflow request:** Use plan mode. Propose the architecture and a phased implementation plan, resolve the "Decisions for the planner" section, and confirm the plan before writing code.
 
@@ -49,7 +49,7 @@ The primary/secondary distinction is mainly **context information** for the read
 | `type` | One of the types above |
 | `name` | Required, short |
 | `description` | Optional, free text |
-| `technology` | Optional (e.g. "PostgreSQL"); mainly useful for storage/external systems |
+| `technology` | Optional, shown as plain text under the name (e.g. "PostgreSQL"). For a primary actor it is how they reach the system (e.g. "WPF", "Web browser", "CLI") |
 | `x`, `y` | Position of the element's centre (diagram units) |
 | `pinned` | `true` once the user has dragged it; auto-layout leaves pinned elements alone |
 
@@ -58,8 +58,7 @@ The primary/secondary distinction is mainly **context information** for the read
 |---|---|
 | `id` | Stable id |
 | `from`, `to` | Element ids |
-| `label` | Short text, e.g. "Submits orders" |
-| `technology` | Optional protocol/tech tag, e.g. "HTTPS/JSON" |
+| `label` | A plain sentence, e.g. "Submits orders". Relationships carry no technology; that belongs to the elements. |
 | `direction` | `oneWay` (from → to) \| `twoWay` |
 
 **Rules**
@@ -75,18 +74,18 @@ The primary/secondary distinction is mainly **context information** for the read
   "title": "Online Shop",
   "elements": [
     { "id": "sys", "type": "system", "name": "Shop Platform", "description": "Web shop and order handling", "x": 0, "y": 0, "pinned": false },
-    { "id": "cust", "type": "primaryActor", "name": "Customer", "x": -350, "y": -80, "pinned": false },
+    { "id": "cust", "type": "primaryActor", "name": "Customer", "technology": "Web browser", "x": -350, "y": -80, "pinned": false },
     { "id": "admin", "type": "primaryActor", "name": "Shop Admin", "x": -350, "y": 120, "pinned": false },
     { "id": "pay", "type": "secondaryActor", "name": "Payment Provider", "technology": "Stripe", "x": 350, "y": -150, "pinned": false },
     { "id": "mail", "type": "externalSystem", "name": "Email Service", "technology": "SMTP", "x": 350, "y": 0, "pinned": false },
     { "id": "db", "type": "storage", "name": "Orders DB", "technology": "PostgreSQL", "x": 350, "y": 180, "pinned": false }
   ],
   "relationships": [
-    { "id": "r1", "from": "cust", "to": "sys", "label": "Places orders", "technology": "HTTPS", "direction": "oneWay" },
-    { "id": "r2", "from": "admin", "to": "sys", "label": "Manages catalogue", "technology": "HTTPS", "direction": "oneWay" },
-    { "id": "r3", "from": "sys", "to": "pay", "label": "Takes payment", "technology": "REST/JSON", "direction": "twoWay" },
-    { "id": "r4", "from": "sys", "to": "mail", "label": "Sends receipts", "technology": "SMTP", "direction": "oneWay" },
-    { "id": "r5", "from": "sys", "to": "db", "label": "Reads/writes orders", "technology": "SQL", "direction": "twoWay" }
+    { "id": "r1", "from": "cust", "to": "sys", "label": "Places orders", "direction": "oneWay" },
+    { "id": "r2", "from": "admin", "to": "sys", "label": "Manages catalogue", "direction": "oneWay" },
+    { "id": "r3", "from": "sys", "to": "pay", "label": "Takes payment", "direction": "twoWay" },
+    { "id": "r4", "from": "sys", "to": "mail", "label": "Sends receipts", "direction": "oneWay" },
+    { "id": "r5", "from": "sys", "to": "db", "label": "Reads/writes orders", "direction": "twoWay" }
   ]
 }
 ```
@@ -97,9 +96,9 @@ Use camelCase property names and camelCase enum strings. Indented output with st
 **Canvas and editing**
 - Main window: toolbar (New, Open, Save, Save As, Export SVG, Auto-layout), a pan/zoomable canvas, and a properties panel for the selected item.
 - Add element via toolbar buttons per type (Primary Actor, Secondary Actor, External System, Storage). Added elements are auto-placed in their layout zone and given an editable default name.
-- Create a relationship by selecting a source element, then dragging or clicking to a target (planner to pick the simplest reliable interaction). Edit label, technology, and direction in the properties panel.
+- Create a relationship by selecting a source element, then dragging or clicking to a target (planner to pick the simplest reliable interaction). Edit label and direction in the properties panel.
 - Select, rename, delete (Delete key) elements and relationships. Inline rename on double-click is nice to have.
-- Drag elements to move them; this sets `pinned = true`. Pinned elements may be dragged anywhere, including across the centre line. Relationship lines follow the elements and attach at element edges, with arrowheads per `direction`, label and tech tag rendered on or near the line.
+- Drag elements to move them; this sets `pinned = true`. Pinned elements may be dragged anywhere, including across the centre line. Relationship lines follow the elements and attach at element edges, with arrowheads per `direction` and the label rendered on the line, wrapped onto a few lines if long.
 - Distinct visual shapes per type, readable at a glance. Suggestion: person-like shape or icon for primary actor, a visibly related but distinguishable style for secondary actor, emphasised rectangle for the system, plain rectangle for external system, cylinder for storage. Keep styling simple.
 - Optional: a faint vertical divider or subtle zone tinting to reinforce the left/right split (planner's call; must not appear in the SVG export unless cheap and tasteful).
 
@@ -120,7 +119,7 @@ The central system sits at the origin. A clear vertical split runs through it: *
 - Loading a malformed or invalid file shows a clear message and leaves the current diagram untouched.
 
 **SVG export**
-- Export the full diagram to a single standalone `.svg`: shapes, text, arrows, labels, tech tags, cropped to content with a margin.
+- Export the full diagram to a single standalone `.svg`: shapes, text, arrows, labels, cropped to content with a margin.
 - Generated from the model by a dedicated exporter in the core library (not a screenshot of the WPF canvas), so it is testable and WPF-independent.
 
 ## 5. Suggested structure (planner may refine)
@@ -153,7 +152,7 @@ Please decide and justify briefly in the plan:
 ## 8. Acceptance criteria
 
 - [ ] New diagram starts with one central system; I can add primary actors, secondary actors, external systems, and storage.
-- [ ] I can connect elements with labelled, tech-tagged, one-way or two-way arrows.
+- [ ] I can connect elements with labelled, one-way or two-way arrows.
 - [ ] Auto-layout puts primary actors on the left and secondary actors (top-right), external systems (middle-right) and storage (bottom-right) on the right, without overlaps.
 - [ ] Dragging an element keeps it where I put it, even through later auto-layouts.
 - [ ] Save, close, reopen: the diagram is identical, and the JSON is readable and hand-editable.

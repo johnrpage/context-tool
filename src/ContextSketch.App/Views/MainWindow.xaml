@@ -83,6 +83,18 @@
                         <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Text="Technology" Style="{StaticResource FieldLabel}" />
                         <TextBox Text="{Binding Technology, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="How they reach the system, e.g. WPF, web browser, CLI" TextWrapping="Wrap" FontSize="11" Foreground="#52606D" Margin="0,2,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Type}" Value="PrimaryActor">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <TextBlock Text="Description" Style="{StaticResource FieldLabel}" />
                         <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" VerticalScrollBarVisibility="Auto" />
                     </StackPanel>
@@ -92,9 +104,7 @@
                         <TextBlock Text="Relationship" Style="{StaticResource Heading}" />
                         <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Foreground="#52606D" />
                         <TextBlock Text="Label" Style="{StaticResource FieldLabel}" />
-                        <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock Text="Technology" Style="{StaticResource FieldLabel}" />
-                        <TextBox Text="{Binding Technology, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" LostFocus="OnLabelLostFocus" />
                         <TextBlock Text="Direction" Style="{StaticResource FieldLabel}" />
                         <ComboBox ItemsSource="{x:Static vm:RelationshipViewModel.DirectionOptions}" SelectedItem="{Binding Direction}" />
                         <Button Content="Swap source and target" Command="{Binding SwapEndsCommand}" Margin="0,8,0,0" Padding="6,3" HorizontalAlignment="Left" />

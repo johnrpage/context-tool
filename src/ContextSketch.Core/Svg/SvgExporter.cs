@@ -73,21 +73,19 @@ public static class SvgExporter
             new XAttribute("class", "relationship"), new XAttribute("data-id", r.Id), line);
 
         var mid = EdgeGeometry.Midpoint(start, end);
-        var lines = new List<(string Text, double Size, string Color)>();
-        if (!string.IsNullOrWhiteSpace(r.Label)) lines.Add((r.Label, LabelFontSize, DiagramStyle.LabelText));
-        if (!string.IsNullOrWhiteSpace(r.Technology)) lines.Add(("[" + r.Technology + "]", SmallFontSize, DiagramStyle.LineColor));
+        var lines = TextWrap.LabelLines(r.Label, start, end);
 
         // Centre the label block on the line, each row on a white patch so the line does not strike through it.
-        var y = mid.Y - lines.Sum(l => l.Size * LineHeight) / 2;
-        foreach (var (text, size, color) in lines)
+        var rowHeight = LabelFontSize * LineHeight;
+        var y = mid.Y - lines.Count * rowHeight / 2;
+        foreach (var text in lines)
         {
-            var width = EstimateWidth(text, size) + 8;
-            var rowHeight = size * LineHeight;
+            var width = EstimateWidth(text, LabelFontSize) + 8;
             group.Add(new XElement(Ns + "rect",
                 new XAttribute("x", Num(mid.X - width / 2)), new XAttribute("y", Num(y)),
                 new XAttribute("width", Num(width)), new XAttribute("height", Num(rowHeight)),
                 new XAttribute("fill", DiagramStyle.Background)));
-            group.Add(Text(text, mid.X, y + rowHeight / 2, size, color, bold: false));
+            group.Add(Text(text, mid.X, y + rowHeight / 2, LabelFontSize, DiagramStyle.LabelText, bold: false));
             y += rowHeight;
         }
         return group;
@@ -118,7 +116,7 @@ public static class SvgExporter
             ElementType.Storage => Cylinder(box, colours),
             ElementType.PrimaryActor => Box(box, colours, radius: 10, dashed: false),
             ElementType.SecondaryActor => Box(box, colours, radius: 10, dashed: true),
-            ElementType.System => Box(box, colours, radius: 6, dashed: false),
+            ElementType.System => Box(box, colours, radius: 6, dashed: false, strokeWidth: DiagramStyle.SystemStrokeWidth),
             _ => Box(box, colours, radius: 0, dashed: false),
         });
 
@@ -126,17 +124,18 @@ public static class SvgExporter
         var nameSize = e.Type == ElementType.System ? 16 : NameFontSize;
         var textWidth = box.Width - 20;
 
-        var nameLines = Wrap(e.Name, MaxChars(textWidth, nameSize), maxLines: 2);
-        var tag = e.Type == ElementType.System || string.IsNullOrWhiteSpace(e.Technology)
-            ? null
-            : Wrap("[" + e.Technology + "]", MaxChars(textWidth, SmallFontSize), maxLines: 1)[0];
+        var nameLines = TextWrap.Wrap(e.Name, MaxChars(textWidth, nameSize), maxLines: 2);
+        // Technology gets two lines and the system's description three, the same room the canvas gives them.
+        List<string> technology = e.Type == ElementType.System || string.IsNullOrWhiteSpace(e.Technology)
+            ? []
+            : TextWrap.Wrap(e.Technology, MaxChars(textWidth, SmallFontSize), maxLines: 2);
         var description = e.Type == ElementType.System && !string.IsNullOrWhiteSpace(e.Description)
-            ? Wrap(e.Description, MaxChars(textWidth, SmallFontSize), maxLines: 2)
+            ? TextWrap.Wrap(e.Description, MaxChars(textWidth, SmallFontSize), maxLines: 3)
             : [];
 
         var total = (isActor ? GlyphSize : 0)
                     + nameLines.Count * nameSize * LineHeight
-                    + (tag is null ? 0 : SmallFontSize * LineHeight)
+                    + technology.Count * SmallFontSize * LineHeight
                     + (description.Count > 0 ? 4 + description.Count * SmallFontSize * LineHeight : 0);
 
         // The cylinder lid takes space at the top, so its text sits a little lower.
@@ -159,9 +158,11 @@ public static class SvgExporter
             group.Add(Text(line, cx, y + nameSize * LineHeight / 2, nameSize, colours.Text, bold: true));
             y += nameSize * LineHeight;
         }
-        if (tag is not null)
+        foreach (var line in technology)
         {
-            group.Add(Text(tag, cx, y + SmallFontSize * LineHeight / 2, SmallFontSize, colours.Text, bold: false));
+            // Technology is plain, smaller, slightly faded text under the name.
+            group.Add(Text(line, cx, y + SmallFontSize * LineHeight / 2, SmallFontSize, colours.Text, bold: false)
+                .WithAttribute("fill-opacity", DiagramStyle.TechnologyOpacity));
             y += SmallFontSize * LineHeight;
         }
         if (description.Count > 0)
@@ -176,13 +177,13 @@ public static class SvgExporter
         return group;
     }
 
-    private static XElement Box(Rect box, Palette colours, double radius, bool dashed)
+    private static XElement Box(Rect box, Palette colours, double radius, bool dashed, double strokeWidth = 2)
     {
         var rect = new XElement(Ns + "rect",
             new XAttribute("x", Num(box.Left)), new XAttribute("y", Num(box.Top)),
             new XAttribute("width", Num(box.Width)), new XAttribute("height", Num(box.Height)),
             new XAttribute("rx", Num(radius)), new XAttribute("ry", Num(radius)),
-            new XAttribute("fill", colours.Fill), new XAttribute("stroke", colours.Stroke), new XAttribute("stroke-width", "2"));
+            new XAttribute("fill", colours.Fill), new XAttribute("stroke", colours.Stroke), new XAttribute("stroke-width", Num(strokeWidth)));
         if (dashed) rect.Add(new XAttribute("stroke-dasharray", "4 3"));
         return rect;
     }
@@ -223,35 +224,11 @@ public static class SvgExporter
 
     private static int MaxChars(double width, double size) => Math.Max(4, (int)(width / (size * 0.55)));
 
-    /// <summary>Greedy word wrap; text that does not fit in <paramref name="maxLines"/> is cut with an ellipsis.</summary>
-    internal static List<string> Wrap(string text, int maxChars, int maxLines)
+    private static XElement WithAttribute(this XElement element, string name, object value)
     {
-        var lines = new List<string>();
-        var current = "";
-        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var candidate = current.Length == 0 ? word : current + " " + word;
-            if (candidate.Length <= maxChars || current.Length == 0)
-                current = candidate;
-            else
-            {
-                lines.Add(current);
-                current = word;
-            }
-        }
-        lines.Add(current);
-
-        if (lines.Count > maxLines)
-        {
-            lines = lines.Take(maxLines).ToList();
-            lines[^1] = Truncate(lines[^1], maxChars - 1) + "…";
-        }
-        else if (lines[^1].Length > maxChars)
-            lines[^1] = Truncate(lines[^1], maxChars - 1) + "…";
-        return lines;
+        element.Add(new XAttribute(name, value));
+        return element;
     }
-
-    private static string Truncate(string s, int length) => s.Length <= length ? s : s[..Math.Max(0, length)];
 
     private static string Camel(ElementType type)
     {

@@ -39,14 +39,49 @@ public class SvgExporterTests
     }
 
     [Fact]
-    public void Contains_names_and_technology_tags()
+    public void Contains_names_and_plain_technology()
     {
         var text = Parse(Shop()).Descendants(Svg + "text").Select(t => t.Value).ToList();
         Assert.Contains("Customer", text);
-        Assert.Contains("[Stripe]", text);
-        Assert.Contains("Takes payment", text);
-        Assert.Contains("[REST/JSON]", text);
+        Assert.Contains("Web browser", text);
+        Assert.Contains("Stripe", text);
         Assert.Contains("Web shop and order handling", text);
+        Assert.DoesNotContain(text, t => t.StartsWith('['));
+    }
+
+    [Fact]
+    public void Technology_is_drawn_faded()
+    {
+        var pay = Elements(Parse(Shop())).First(g => (string)g.Attribute("data-id")! == "pay");
+        var tech = pay.Elements(Svg + "text").Single(t => t.Value == "Stripe");
+        Assert.Equal("0.8", (string?)tech.Attribute("fill-opacity"));
+    }
+
+    [Fact]
+    public void Relationship_labels_only_show_the_label()
+    {
+        var r3 = Relationships(Parse(Shop())).First(g => (string)g.Attribute("data-id")! == "r3");
+        Assert.Equal("Takes payment", string.Join(" ", r3.Elements(Svg + "text").Select(t => t.Value)));
+    }
+
+    [Fact]
+    public void Long_relationship_labels_wrap_onto_at_most_three_lines()
+    {
+        var d = Shop();
+        d.Relationships[0].Label = "Browses the catalogue, fills a basket, pays for it and then tracks the order until it arrives";
+
+        var rows = Relationships(Parse(d)).First(g => (string)g.Attribute("data-id")! == "r1").Elements(Svg + "text").Select(t => t.Value).ToList();
+
+        Assert.Equal(3, rows.Count);
+        Assert.All(rows, row => Assert.True(row.Length <= TextWrap.LabelMaxChars, row));
+        Assert.EndsWith("…", rows[^1]);
+    }
+
+    [Fact]
+    public void The_system_has_a_heavier_outline()
+    {
+        var sys = Elements(Parse(Shop())).First(g => (string)g.Attribute("data-type")! == "system");
+        Assert.Equal("3", (string?)sys.Element(Svg + "rect")!.Attribute("stroke-width"));
     }
 
     [Fact]
@@ -130,7 +165,7 @@ public class SvgExporterTests
         var d = Shop();
         d.Elements[1].Name = "A very long customer role name that cannot possibly fit in one box";
 
-        var rows = Elements(Parse(d)).First(g => (string)g.Attribute("data-id")! == "cust").Elements(Svg + "text").Select(t => t.Value).ToList();
+        var rows = Elements(Parse(d)).First(g => (string)g.Attribute("data-id")! == "cust").Elements(Svg + "text").Where(t => t.Attribute("fill-opacity") is null).Select(t => t.Value).ToList();
 
         Assert.True(rows.Count <= 2);
         Assert.EndsWith("…", rows[^1]);
@@ -145,7 +180,7 @@ public class SvgExporterTests
     }
 
     [Fact]
-    public void Relationship_without_label_or_technology_draws_only_the_line()
+    public void Relationship_without_a_label_draws_only_the_line()
     {
         var d = Diagram.CreateNew();
         d.AddElement(ElementType.Storage, "DB");
@@ -169,7 +204,7 @@ public class SvgExporterTests
     [InlineData("supercalifragilistic", 8, 2, "superca…")]
     public void Wrap_breaks_on_words_and_truncates(string text, int maxChars, int maxLines, string expected)
     {
-        Assert.Equal(expected, string.Join("|", SvgExporter.Wrap(text, maxChars, maxLines)));
+        Assert.Equal(expected, string.Join("|", TextWrap.Wrap(text, maxChars, maxLines)));
     }
 
     private static void AutoLayoutAll(Diagram d) => Layout.AutoLayout.Apply(d, clearPins: true);

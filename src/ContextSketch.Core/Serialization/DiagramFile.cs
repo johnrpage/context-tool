@@ -28,6 +28,5 @@ internal sealed class RelationshipFile
     public string? From { get; set; }
     public string? To { get; set; }
     public string? Label { get; set; }
-    public string? Technology { get; set; }
     public string? Direction { get; set; }
 }

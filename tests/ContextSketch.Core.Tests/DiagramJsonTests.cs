@@ -39,15 +39,15 @@ public class DiagramJsonTests
         e.Description = "All orders";
         e.Technology = "PostgreSQL";
         e.X = 120; e.Y = -40; e.Pinned = true;
-        r.Label = "Reads/writes"; r.Technology = "SQL"; r.Direction = RelationshipDirection.TwoWay;
+        r.Label = "Reads/writes"; r.Direction = RelationshipDirection.TwoWay;
 
         var loaded = LoadOk(DiagramJson.Save(d));
 
         Assert.Equal(d.Title, loaded.Title);
         Assert.Equal(d.Elements.Select(x => (x.Id, x.Type, x.Name, x.Description, x.Technology, x.X, x.Y, x.Pinned)),
                      loaded.Elements.Select(x => (x.Id, x.Type, x.Name, x.Description, x.Technology, x.X, x.Y, x.Pinned)));
-        Assert.Equal(d.Relationships.Select(x => (x.Id, x.From, x.To, x.Label, x.Technology, x.Direction)),
-                     loaded.Relationships.Select(x => (x.Id, x.From, x.To, x.Label, x.Technology, x.Direction)));
+        Assert.Equal(d.Relationships.Select(x => (x.Id, x.From, x.To, x.Label, x.Direction)),
+                     loaded.Relationships.Select(x => (x.Id, x.From, x.To, x.Label, x.Direction)));
     }
 
     [Fact]
@@ -59,6 +59,23 @@ public class DiagramJsonTests
         Assert.Contains("\n  ", json);
         Assert.DoesNotContain("description", json);
         Assert.DoesNotContain("technology", json);
+    }
+
+    [Fact]
+    public void Technology_on_a_relationship_in_an_older_file_is_ignored_and_not_saved()
+    {
+        var json = """
+        { "schemaVersion": 1, "title": "t", "elements": [
+          { "id": "s", "type": "system", "name": "S", "x": 0, "y": 0 },
+          { "id": "u", "type": "primaryActor", "name": "User", "technology": "WPF", "x": -350, "y": 0 } ],
+          "relationships": [ { "id": "r", "from": "u", "to": "s", "label": "Uses", "technology": "HTTPS", "direction": "oneWay" } ] }
+        """;
+
+        var saved = DiagramJson.Save(LoadOk(json));
+
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(saved, "\"technology\""));
+        Assert.Contains("\"technology\": \"WPF\"", saved);
+        Assert.DoesNotContain("HTTPS", saved);
     }
 
     [Fact]
